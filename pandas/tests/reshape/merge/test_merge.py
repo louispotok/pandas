@@ -601,6 +601,59 @@ class TestMerge(object):
         assert result['value_x'].dtype == 'datetime64[ns, US/Eastern]'
         assert result['value_y'].dtype == 'datetime64[ns, US/Eastern]'
 
+    def test_merge_on_datetime_tz_left_index_right_col(self):
+        # GH23931
+        left = DataFrame(
+            {
+                'date': pd.date_range(start='2018-01-01', periods=5, tz='America/Chicago'),
+                'vals': list('abcde')
+            }
+        )
+
+        right = DataFrame(
+            {
+                'date': pd.date_range(start='2018-01-03', periods=5, tz='America/Chicago'),
+                'vals_2': list('tuvwx')
+            }
+        )
+
+        result = pd.merge(left.set_index('date'), right, left_index=True, right_on='date', how='left').reset_index(drop=True)
+        expected = DataFrame(
+            {
+                'date': pd.date_range(start='2018-01-01', periods=5, tz='America/Chicago'),
+                'vals': list('abcde'),
+                'vals_2': [np.nan, np.nan, 't', 'u', 'v']
+            },
+            columns=['vals', 'date', 'vals_2']
+        )
+        tm.assert_frame_equal(result, expected)
+
+    def test_merge_on_datetime_tz_left_col_right_index(self):
+        # GH23931
+        left = DataFrame(
+            {
+                'date': pd.date_range(start='2018-01-01', periods=5, tz='America/Chicago'),
+                'vals': list('abcde')
+            }
+        )
+
+        right = DataFrame(
+            {
+                'date': pd.date_range(start='2018-01-03', periods=5, tz='America/Chicago'),
+                'vals_2': list('tuvwx')
+            }
+        )
+
+        result = pd.merge(left, right.set_index('date'), left_on='date', right_index=True, how='right').reset_index(drop=True)
+        expected = DataFrame(
+            {
+                'date': pd.date_range(start='2018-01-03', periods=5, tz='America/Chicago'),
+                'vals': ['c', 'd', 'e', np.nan, np.nan],
+                'vals_2': list('tuvwx')
+            },
+        )
+        tm.assert_frame_equal(result, expected)
+
     def test_merge_non_unique_period_index(self):
         # GH #16871
         index = pd.period_range('2016-01-01', periods=16, freq='M')

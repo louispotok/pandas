@@ -888,7 +888,7 @@ class _MergeOperation(object):
                               for lev, lab in zip(self.right.index.levels,
                                                   self.right.index.labels)]
             else:
-                right_keys = [self.right.index.values]
+                right_keys = [self.right.index]
         elif _any(self.right_on):
             for k in self.right_on:
                 if is_rkey(k):
@@ -903,7 +903,7 @@ class _MergeOperation(object):
                              for lev, lab in zip(self.left.index.levels,
                                                  self.left.index.labels)]
             else:
-                left_keys = [self.left.index.values]
+                left_keys = [self.left.index]
 
         if left_drop:
             self.left = self.left._drop_labels_or_levels(left_drop)
